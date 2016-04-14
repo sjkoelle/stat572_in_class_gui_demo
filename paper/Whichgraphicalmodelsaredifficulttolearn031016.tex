@@ -1,0 +1,81 @@
+\documentclass[12pt]{article}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{amsmath}
+\usepackage{url}
+\usepackage{epstopdf,gensymb}
+\usepackage{graphics}
+\usepackage{graphicx}
+\usepackage[numbers]{natbib}
+%\usepackage{endfloat}
+\usepackage{amsfonts, animate,subfigure}
+\usepackage{amsthm,amsmath,amssymb}
+\usepackage[margin=1in]{geometry}
+\usepackage{bbm}
+%\usepackage[sc]{mathpazo}
+%\linespread{1.05}  
+\usepackage{setspace}
+\usepackage[export]{adjustbox}
+
+\usepackage[normalem]{ulem}
+
+\usepackage[usenames,dvipsnames]{xcolor}
+
+
+\usepackage{thmtools}
+
+\declaretheorem[name=Definition]{defn}
+\declaretheorem[name=Theorem]{thm}
+\declaretheorem[name=Proposition, sibling=thm]{prop}
+\declaretheorem[name=Lemma, sibling=thm]{lemma}
+\declaretheorem[name=Corollary, sibling=thm]{cor}
+
+\newcommand\showproofs{0}
+
+\renewcommand{\b}[1]{\mathbf{#1}}
+\newcommand{\bs}[1]{\boldsymbol{#1}}
+\newcommand{\s}[1]{\mathcal{#1}}
+\renewcommand{\d}[1]{\mathbb{#1}}
+\newcommand{\h}[1]{\hat{#1}}
+\renewcommand{\t}[1]{\tilde{#1}}
+\newcommand{\n}[1]{\mathrm{#1}}
+\pdfminorversion=4
+\setcitestyle{square}
+\author{Sam Koelle}
+
+\title{Which graphical models are difficult to learn?}
+
+\begin{document}
+\maketitle
+
+
+This brief overviews "Which graphical models are difficult to learn?" by Bento and Montanari, along with connections to other interesting topics. The parameters $P_1, \dotsc, P_p$ we observe objects $X_1, \dotsc X_n}$ according to form a Markov Random Field, that is, a graphical model $G = (\{P\},\{E\})$, where the edges $E$ represent the existence of conditional dependencies between two parameters.  These parameters could conceivably take a continuous value, a categorical value, or some combination.  For example, a gene can have a categorical chromatin binding state and also a continuous RNA expression value. Dependencies between parameters are often interesting in their own right or as part of the regression problem of optimizing $\theta$ in $Y \approx \mathbb{X}\theta$ where $\mathbb{X} = \{X_1, \dotsc X_n}\}$.  Note that inferring dependencies locally is also a regression problem $X_a \approx \mathbb{X}_{-a}\theta_a$, where $\mathbb{X}_{-a}$ are adjacent sites of parameter $a$ and $\theta_a$ are their edge weights \citep{Meinshausen2006-fx}. Here $\theta$ is a P by P matrix analogous to the precision matrix $\Sigma^{-1}$ in Gaussian graphical model selection in the sense that $\theta_{ij}$ is non-zero iff $e_{ij} \in E$ \citep{Friedman2008-xh}.  While recovery of these dependencies is guaranteed given infinite samples and computational resources, we are often forced by practical concerns to use a expedient algorithm which can solve the system even when P, the number of parameters, is greater than N, the number of observations \citep{Bento2011-vw}.
+
+The titular paper investigates the accuracy of the expedient algorithms Local Independence Testing (Lit) and in particular Regularized Logistic Regression (Rlr) for reconstruction of the edges E of the Ising model, a stochastic model with likelihood density
+\[\mu_{G,\theta}(X) = \frac{1}{Z_{G,\theta}}\prod_{i,j \in p}e^{\theta_{ij}x_ix_j} \qquad x_i \in \{-1,1\}\]
+from empirical data $\mathbb{X}$.  Lit finds neighborhoods of a parameter $a$ by testing conditional independence structures of candidate neighborhoods, while Rlr makes use of a likelihood-specific loss function and regularization penalty within the local dependence inference paradigm described in the first paragraph.  These algorithms are evaluated by their sample complexity
+
+\[n_{Alg}^\delta(G,\theta) \equiv \inf(n \in \mathbb{N} \mid \mathbb{P}(Alg(\mathbb{X}) = G) > 1-\delta)\]
+
+The key theoretical result of this paper is as follows.  Assume that $\theta$ is uniform.  If $\Delta$, the maximum degree of a graph, is greater than 3 and $\theta > K/\Delta$ for some constant $K$, then there exist graphs G with degree bounded by $\Delta$ such that $n_{Rlr}(G) = \infty$, where a reasonable $\lambda$ is determined based on performance on a star graph of degree $\Delta$.  The proof of this result relies on derivation of an Ising-model specific $incoherence$ condition $\|Q_{s^cs}Q_{ss}^{-1}z_s\|_\infty > 1$ where $Q$ is the Hessian $Q(\mu_{G,\theta},\mathbb{X})$ of the likelihood function of true graph and $z$ is subgradient of the one-norm of the true parameters $\theta$.  The authors show that for $\Delta > 3$, and $\theta$ above some critical point, the incoherence condition is violated for random graphs, i.e. certain parameters are similar enough to each other that the perfect support recovery demanded by $n_{alg}$ is unachievable.
+
+Importantly, the set of graphs G for which Rlr fails is fairly broad. The authors perform a number of simulations to show this and verify their results.  They create eight graphs with p = 49 by first creating 7x7 grid graphs and removing edges with probability 0.3.  They then use Gibbs sampling to generate n = 4500 stochastic realizations of each graph, and use Rlr over a range of $\lambda_0$ where $\lambda = 2\lambda_0\log(p/n)^{1/2}$ to estimate graph structure until convergence.  They show that $\mathbb{P}(Alg(\mathbb{X})$ declines rapidly near $\theta_{crit} \approx 0.7$, the theoretical critical point, or Curie tempurate, at which an Ising model with edge probability 0.3 undergoes a phase transition from from a state in which probability is maximized by equivalent spins to a state in which it is maximized by heterogenous spins.  The phase transition should be understood as the rapid or instant transformation of the partition function from taking is maximum at one configuration to taking its maximum at another far different configuration as the model parameters are uniformly scaled. They then create realizations using a range of thetas on a graph with uniform edge probability, degree = 4, and p = 50.  At the Curie temperature, they observe that $\mathbb{P}(Alg(\mathbb{X})$ decreases rapidly, and $n_{Alg}$ becomes intractably high to simulate.  
+
+While phase-transitions are evidently and perhaps intuitively relevant to algorithmic accuracy, they are poorly understood for broad classes of models.  The Ising model was developed for the analysis of ferromagnetism, which is a two-spin lattice system, but has many generalizations.  It is the $n=1, q = \{2\}$ case of the $n$-$vector\;model$
+\[H_G(X) = -J\sum_{(i,j) \in E(G)}s_i \cdot s_j  \qquad \mu_{G}(X) \approx \frac{1}{Z_{G}}e^{-H_G(X)}\]
+where $s_i$ is an vector of length n taking values among $q$ spins.  Just as how the Ising model embeds the relationship between two categorical variables in a one-dimensional manifold parameterized by $\theta$, the n-vector model embeds the relationships between $c$ categorical values in a $c-1$ dimensional manifold parameterized by the possibly tensor-valued $J$, which can be indexed by pairs of \{parameters, categorical variables\}.
+
+The n-vector model has many applications in statistics and physics.  While is possible to find phase transitions through Monte Carlo methods, a general derived way of identifying the Curie temperature is desirable.  Interestingly, the partition function is computable as the multivariate Tutte Polynomial
+\[Z_{G}(q,\textbf{J}) = \sum_{A \subseteq E(G)}q^{k(A)} \prod_{e \in A} J_e\]
+where $k(A)$ is equal to the number of connected components of $A$ \citep{Sokal2005-ql}.  While the multivariate Tutte Polynomial offers edge-specific parameterization necessary for many statistical applications, it obscures the pleasant recursive definition of the univariate case, namely
+\[Z_{G}(q,J) = Z_{G\backslash{e}}(q) + Z_{G/e}(q) \text{if e is neither a bridge nor a loop}\]
+\[Z_{G}(q,J) = q^iJ^j \text{ if G has only i bridges and j loops}\]
+where bridge and loop refer to the connected graphs with two vertices and one edge, and one vertex and one edge, respectively \citep{Beaudin2007-vh}.  Here, $\backslash$ and $/$ refer to deletion and contraction of an edge.  This recursive definition admits a categorification in a manner similar to Khovanov's categorification of the Jones Polynomial for knots.  That is, we can construct from a graph G a chain complex of graded vector spaces whose graded Euler characteristic is the partition at certain possibly imaginary values of temperature, which is a scalar multiplier of $J$ \citep{Kauffman2009-ag}.  The hope is that properties such as phase transition will emerge naturally from this homological description.
+
+The Ising model appears in my research on gene expression analysis in single cells.  Single-cell gene expression is quite sparse (much more so than bulk gene-expression), and may be considered either through a Hurdle model, or, more simply, as an Ising model, in which a gene can be either on or off.  There are several ways in which the results of Bento and Montanari, and also the homological approach, would need to be extended in order to be useful for this specific situation.  First, since we don't expect all genetic interactions to have the same strength, they must accommodate tensor-valued edge weights.  Second, instead of support recovery sample complexity, we would like to evaluate the number of samples necessary to achieve a certain prediction or estimation accuracy, which is probably achievable at a satisfactory level over a broader range of graphs than support recovery (remember, one "bad" parameter can violate the incoherence condition).  Professor Lederer and his collaborators have worked on this in the Gaussian linear regression setting, and claim that their results will flexibly apply to a range of models.  In particular, a $restricted\;eigenvalue\;condition$ on the design matrix may be used to show prediction convergence rate in the Gaussian setting, that is, if the differences between the parameters in the true support are great enough, Rlr does not require too many samples to achieve optimum prediction \citep{Dalalyan2014-al}.
+
+I am particularly interested in mixed-exponential family Markov Random Fields, which enable computation of edge-specific sufficient statistics for sites (parameters, or genes) which can take a mixture of categorical and continuous values from possibly site-specific sets \citep{Yang2014-tc}.  These are the most flexible version of Markov Random Fields which I can find, are obviously relevant to genetic network data, and seem to respect the intrinsic structure of reality.   Many common graphical models can be thought of as restrictions of these families, though it is unclear to me whether these families can encode edge weights determined by more complicated stochastic process, or are somehow time dependent.  A properly general treatment of convergence rates and phase transitions in this setting may help with choice of inference strategies, of which very few have been proposed, perhaps because of the recency of the model.  For single-cell analysis, it is especially beneficial to think of a site taking discrete and continuous values for each cell measured.  For example, the frequency of antigen-specific T cells in blood does not correlate with antigen protection, i.e. some subset of genes within some subset of cells is responsible for outcome in a way that may be lost through averaging.  Justifiable tensor-valued variable selection within this setting will become essential as single-cell technologies emerge, and is relevant to a variety of other data types.
+
+\bibliographystyle{unsrtnat}
+\bibliography{mybib}
+
+\end{document}
